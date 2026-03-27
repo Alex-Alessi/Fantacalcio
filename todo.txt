@@ -1,0 +1,1 @@
+Le statistiche sono della singola partita, vanno azzerate, ma prima di farlo dovremmo salvarle in un modello, per sapere poi nel dettaglio del giocatore quanti gol complessivi ha, quanti assist, ecc.
