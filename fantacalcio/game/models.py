@@ -298,6 +298,7 @@ class PartitaLega(models.Model):
 
 class Classifica(models.Model):
     squadra=models.ForeignKey(Squadra, on_delete=models.CASCADE)
+    lega=models.ForeignKey(Lega, on_delete=models.CASCADE)
     vittorie=models.IntegerField(default=0)
     pareggi=models.IntegerField(default=0)
     sconfitte=models.IntegerField(default=0)
@@ -323,7 +324,7 @@ class Classifica(models.Model):
                 self.punti+=0
             self.gol_fatti+=gol_fatti
             self.gol_subiti+=gol_subiti
-            self.differenza_reti+=self.gol_fatti-self.gol_subiti
+            self.differenza_reti=self.gol_fatti-self.gol_subiti
             self.punti_totali+=partita.punti_casa
             self.save()
         else:
@@ -340,6 +341,6 @@ class Classifica(models.Model):
                 self.punti+=0
             self.gol_fatti+=gol_fatti
             self.gol_subiti+=gol_subiti
-            self.differenza_reti+=self.gol_fatti-self.gol_subiti
+            self.differenza_reti=self.gol_fatti-self.gol_subiti
             self.punti_totali+=partita.punti_ospite
             self.save()
