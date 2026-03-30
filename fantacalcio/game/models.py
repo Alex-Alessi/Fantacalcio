@@ -151,7 +151,7 @@ class Squadra(models.Model):
 
 class Giornata(models.Model):
     giornata=models.PositiveIntegerField()
-    finita=models.BooleanField(defalut=False)
+    finita=models.BooleanField(default=False)
     calcolata=models.BooleanField(default=False)
 
 class ImpostazioniRosa(models.Model):
@@ -248,7 +248,7 @@ class Formazione(models.Model):
 class GiocatoreSchierato(models.Model):
     formazione=models.ForeignKey(Formazione, on_delete=models.CASCADE)
     giocatore=models.ForeignKey(Giocatore, on_delete=models.CASCADE)
-    stato=models.CharField(choices=STATO_CHOICES)
+    stato=models.CharField(choices=STATO_CHOICES, default='titolare')
     ordine_panchina=models.PositiveIntegerField(default=0)
     giocatore_sostituito_switch=models.ForeignKey(Giocatore, on_delete=models.SET_NULL, null=True, blank=True, related_name='switch_ricevuti')
 
