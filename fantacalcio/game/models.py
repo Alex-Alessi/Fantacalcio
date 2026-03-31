@@ -309,7 +309,11 @@ class Classifica(models.Model):
     punti_totali=models.FloatField(default=0.0)
 
     def risultati(self, lega, giornata):
-        partita=PartitaLega.objects.get(Q(squadra_casa=self.squadra) | Q(squadra_ospite=self.squadra), giornata=giornata)
+        partita=PartitaLega.objects.filter(Q(squadra_casa=self.squadra) | Q(squadra_ospite=self.squadra), giornata=giornata).first()
+        
+        if not partita:
+            return
+        
         if partita.squadra_casa==self.squadra:
             gol_fatti=partita.gol_casa
             gol_subiti=partita.gol_ospite
