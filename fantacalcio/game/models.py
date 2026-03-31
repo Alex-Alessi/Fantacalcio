@@ -153,6 +153,7 @@ class Giornata(models.Model):
     giornata=models.PositiveIntegerField()
     finita=models.BooleanField(default=False)
     calcolata=models.BooleanField(default=False)
+    orario_inizio=models.DateTimeField(blank=True, null=True)
 
 class ImpostazioniRosa(models.Model):
     lega=models.OneToOneField(Lega, on_delete=models.CASCADE)
