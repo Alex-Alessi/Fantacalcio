@@ -1,10 +1,38 @@
 <h1>Homepage</h1>
 {% if not giornata_iniziata %}
-<h2>{{tempo_rimanente}}</h2>
-<button> Schiera formazione </button>
+<div id="timer" data-time="{{tempo_rimanente}}" style=""></div>
+<div id="azioni">
+    <button id="btn-formazione"> Schiera formazione </button>
+</div>
 {% else %}
 <button> Vai al live </button>
-utlima partita giocata
-prossima partita
 {% endif %}
+<div id="partite">
+    Partita precedente
+    Prossima partita
+</div>
 
+<script>
+    const timer=document.getElementById("timer");
+    let dataTime=Number(timer.dataset.time);
+    let intervalId=setInterval(()=>{
+        if (dataTime <=0){
+            clearInterval(intervalId);
+            document.getElementById("btn-formazione").innerText = "Vai al live";
+            document.getElementById("btn-formazione").id = "btn-live";
+            document.getElementById("timer").style = "display: none";
+        }
+        dataTime-=1;
+        const ore=aggiungiZero(Math.floor(dataTime/3600));
+        const minuti=aggiungiZero(Math.floor((dataTime%3600)/60));
+        const secondi=Math.floor(aggiungiZero((dataTime%3600)%60));
+        timer.innerText=`${ore}:${minuti}:${secondi}`
+    }, 1000);
+    
+    function aggiungiZero(num){
+        if (num<10){
+            num="0"+num;
+        }
+        return String(num)
+    }
+</script>
