@@ -8,8 +8,13 @@
 <button> Vai al live </button>
 {% endif %}
 <div id="partite">
-    {{ultima_giocata}}
-    {{prossima_partita}}
+    {% if ultima_giocata %}
+        <div>{{ultima_giocata.squadra_casa}} {{ultima_giocata.gol_casa}} - {{ultima_giocata.gol_ospite}} {{ultima_giocata.squadra_ospite}}</div>
+    {% endif %}
+
+    {% if prossima_partita %}
+        <div>{{prossima_partita.squadra_casa}} vs {{prossima_partita.squadra_ospite}}</div>
+    {% endif %}
 </div>
 
 <script>
