@@ -1,10 +1,13 @@
 from django.shortcuts import render
-from .models import Giornata, PartitaLega
+from .models import Giornata, PartitaLega, Lega
 from django.utils import timezone
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from .forms import LegaForm
 
 # Create your views here.
 
+@login_required(login_url='/accounts/login/')
 def home(request):
     giornata=Giornata.objects.filter(finita=False).order_by('orario_inizio').first()
     giornata_iniziata=False
@@ -42,3 +45,15 @@ def home(request):
     }
     return render(request, "game/home.html", context)
 
+@login_required(login_url='/accounts/login/')
+def crea_lega_view(request):
+    if request.method == "POST":
+        form = LegaForm(request.POST)
+        if form.is_valid():
+            Lega.objects.create(
+                admin = request.user.profile,
+                nome = form.cleaned_data['name'],
+                partecipanti = form.cleaned_data['partecipanti'],
+                password = form.cleaned_data['password'],
+                crediti = form.cleaned_data['crediti']
+            )

@@ -1,0 +1,6 @@
+<h1>Accedi</h1>
+<form method='POST'>
+    {% csrf_token %} {{form.non_field_errors }} {{form.as_p}}
+    <button type="submit">Accedi</button>
+    <a href="{% url 'register' %}">Non hai un account? Registrati</a>
+</form>

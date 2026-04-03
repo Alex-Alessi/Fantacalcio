@@ -1,0 +1,6 @@
+<h1>Registrati</h1>
+<form method='POST'>
+    {% csrf_token %} {{form.non_field_errors }} {{form.as_p}}
+    <button type="submit">Regitrati</button>
+    <a href="{% url 'login' %}">Hai già un account? Login</a>
+</form>

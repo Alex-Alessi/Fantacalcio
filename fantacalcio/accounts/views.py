@@ -19,7 +19,7 @@ def login_view(request):
                 login(request, user)
                 return redirect('home')
             else:
-                form.add_error(None, "Username o password non validi")
+                form=LoginForm(request.POST)
                 return render(request, "accounts/login.html", {"form":form})
         else:
             return render(request, "accounts/login.html", {"form":form})
