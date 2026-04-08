@@ -1,9 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Giornata, PartitaLega, Lega
 from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-from .forms import LegaForm
+from .forms import LegaForm, JoinLegaForm
 
 # Create your views here.
 
@@ -50,10 +50,29 @@ def crea_lega_view(request):
     if request.method == "POST":
         form = LegaForm(request.POST)
         if form.is_valid():
-            Lega.objects.create(
-                admin = request.user.profile,
-                nome = form.cleaned_data['name'],
+            lega=Lega(
+                admin = request.user,
+                name = form.cleaned_data['name'],
                 partecipanti = form.cleaned_data['partecipanti'],
-                password = form.cleaned_data['password'],
                 crediti = form.cleaned_data['crediti']
             )
+            password = form.cleaned_data['password']
+            if password:
+                lega.set_password(password)
+            lega.save()
+            lega.membri.add(request.user)
+            return redirect('home')
+        else:
+            return render(request, "game/crea_lega.html", {"form":form})
+    else:
+        form=LegaForm()
+    return render(request, "game/crea_lega.html", {"form":form})
+
+@login_required(login_url='/accounts/login/')
+def join_lega_view(request):
+    if request.method == "POST":
+        form=JoinLegaForm(request.POST)
+        if form.is_valid():
+            Lega.objects.filter(name=form.cleaned_data['name'])
+    else:
+        form=JoinLegaForm()

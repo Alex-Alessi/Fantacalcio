@@ -6,3 +6,7 @@ class LegaForm(forms.Form):
     partecipanti=forms.ChoiceField(choices=PARTECIPANTI_CHOICES)
     password=forms.CharField(widget=forms.PasswordInput)
     crediti=forms.ChoiceField(choices=CREDITI_CHOICES)
+
+class JoinLegaForm(forms.Form):
+    name=forms.CharField(max_length=30)
+    password=forms.CharField(widget=forms.PasswordInput, required=False)

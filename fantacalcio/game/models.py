@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from multiselectfield import MultiSelectField
 from django.db.models import Avg, Q
 from django.conf import settings
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -103,10 +104,11 @@ STATO_CHOICES=[
 ]
 
 class Lega(models.Model):
-    admin=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    admin=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='creatore_lega')
     name=models.CharField(max_length=30)
+    membri=models.ManyToManyField(User, related_name='membro_lega')
     partecipanti=models.IntegerField(choices=PARTECIPANTI_CHOICES)
-    password = models.CharField(max_length=128)
+    password = models.CharField(max_length=128, null=True, blank=True)
     crediti = models.IntegerField(choices=CREDITI_CHOICES)
 
     def set_password(self, raw_password):
