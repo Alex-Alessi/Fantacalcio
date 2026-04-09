@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Giornata, PartitaLega, Lega
 from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-from .forms import LegaForm, JoinLegaForm
+from .forms import LegaForm, JoinLegaForm, PasswordLegaForm
 
 # Create your views here.
 
@@ -70,9 +70,39 @@ def crea_lega_view(request):
 
 @login_required(login_url='/accounts/login/')
 def join_lega_view(request):
+    leghe=[]
     if request.method == "POST":
         form=JoinLegaForm(request.POST)
         if form.is_valid():
-            Lega.objects.filter(name=form.cleaned_data['name'])
+            leghe=Lega.objects.filter(name__istartswith=form.cleaned_data['name'])
+            if not leghe.exists():
+                form.add_error(None, "Nessuna lega trovata!")
     else:
         form=JoinLegaForm()
+    return render(request, "game/cerca_lega.html", {"leghe":leghe, "form":form})
+
+@login_required(login_url='/accounts/login/')
+def dettaglio_lega(request, id):
+    lega=get_object_or_404(Lega, id=id)
+    if request.user in lega.membri.all():
+        return redirect('dashboard_squadra', lega_id=lega.id)
+    if lega.membri.count()>=lega.partecipanti:
+        return redirect('home')
+    if lega.password:
+        if request.method == "POST":
+            form=PasswordLegaForm(request.POST)
+            if form.is_valid() and lega.check_password(form.cleaned_data['password']):
+                lega.membri.add(request.user)
+                return redirect("dashboard_squadra", lega_id=lega.id)
+            else:
+                form.add_error(None, "Password errata")
+        else:
+            form=PasswordLegaForm()
+        return render(request, "game/passkey_lega.html", {"form":form})
+    else:
+        lega.membri.add(request.user)
+        return redirect('dashboard_squadra', lega_id=lega.id)
+    
+@login_required(login_url='/accounts/login/')
+def dashboard_squadra(request, id):
+    

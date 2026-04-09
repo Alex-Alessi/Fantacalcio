@@ -9,4 +9,6 @@ class LegaForm(forms.Form):
 
 class JoinLegaForm(forms.Form):
     name=forms.CharField(max_length=30)
-    password=forms.CharField(widget=forms.PasswordInput, required=False)
+
+class PasswordLegaForm(forms.Form):
+    password = forms.CharField(widget=forms.PasswordInput)
