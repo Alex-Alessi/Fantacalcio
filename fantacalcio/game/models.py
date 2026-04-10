@@ -145,7 +145,7 @@ class Squadra(models.Model):
     logo=models.ImageField(upload_to='logo/', blank=True, default='logo/logo.webp')
     primo_allenatore = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='allenatore_principale')
     secondo_allenatore = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="vice_allenatore", null=True, blank=True)
-    lega = models.ForeignKey(Lega, on_delete=models.CASCADE)
+    lega = models.ForeignKey(Lega, on_delete=models.CASCADE, related_name='squadre')
     rosa = models.ManyToManyField(Giocatore)
 
     def __str__(self):

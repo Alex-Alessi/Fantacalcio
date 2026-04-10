@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Giornata, PartitaLega, Lega
+from .models import Giornata, PartitaLega, Lega, Squadra
 from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
@@ -82,8 +82,8 @@ def join_lega_view(request):
     return render(request, "game/cerca_lega.html", {"leghe":leghe, "form":form})
 
 @login_required(login_url='/accounts/login/')
-def dettaglio_lega(request, id):
-    lega=get_object_or_404(Lega, id=id)
+def dettaglio_lega(request, pk):
+    lega=get_object_or_404(Lega, id=pk)
     if request.user in lega.membri.all():
         return redirect('dashboard_squadra', lega_id=lega.id)
     if lega.membri.count()>=lega.partecipanti:
@@ -104,5 +104,16 @@ def dettaglio_lega(request, id):
         return redirect('dashboard_squadra', lega_id=lega.id)
     
 @login_required(login_url='/accounts/login/')
-def dashboard_squadra(request, id):
-    
+def dashboard_squadra(request, pk):
+    lega=get_object_or_404(Lega, id=pk)
+    if lega.membri.filter(id=request.user.id).exists():
+        is_admin=False
+        if request.user == lega.admin:
+            is_admin=True
+            is_free=True
+            if lega.squadre.filter(Squadra.allenatore_principale.id=request.user.id or ):
+
+        context={'lega':lega, 'is_admin':is_admin}
+        return render(request, "game/dashboard_squadra.html", context)
+    else:
+        return redirect('home')

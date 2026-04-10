@@ -1,1 +1,8 @@
 <h1>Dashboard della squadra</h1>
+
+{{lega.name}}
+<ul>
+    {% for membro in lega.membri.all() %}
+        <li>{{membro.username}}</li>
+    {% endfor %}
+</ul>
