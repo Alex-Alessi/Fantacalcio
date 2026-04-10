@@ -112,7 +112,7 @@ def dashboard_squadra(request, pk):
             is_admin=True
             is_free=True
             if lega.squadre.filter(Squadra.allenatore_principale.id=request.user.id or ):
-
+#pseudocodice, da fare bene
         context={'lega':lega, 'is_admin':is_admin}
         return render(request, "game/dashboard_squadra.html", context)
     else:
