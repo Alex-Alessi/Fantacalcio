@@ -3,7 +3,7 @@ from .models import Giornata, PartitaLega, Lega, Squadra
 from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-from .forms import LegaForm, JoinLegaForm, PasswordLegaForm
+from .forms import LegaForm, JoinLegaForm, PasswordLegaForm, SquadraForm
 
 # Create your views here.
 
@@ -110,10 +110,28 @@ def dashboard_squadra(request, pk):
         is_admin=False
         if request.user == lega.admin:
             is_admin=True
-            is_free=True
-            if lega.squadre.filter(Squadra.allenatore_principale.id=request.user.id or ):
-#pseudocodice, da fare bene
-        context={'lega':lega, 'is_admin':is_admin}
-        return render(request, "game/dashboard_squadra.html", context)
+        squadra=lega.squadre.filter(Q(primo_allenatore__user_id=request.user.id)| Q(secondo_allenatore__user_id=request.user.id)).first()
+        if squadra:
+            context={'lega':lega, 'is_admin':is_admin, 'squadra':squadra}
+            return render(request, "game/dashboard_squadra.html", context)
+        else:
+            return redirect('join_squadra', lega_id=lega.id)
     else:
         return redirect('home')
+    
+@login_required(login_url='/accounts/login/')
+def join_squadra(request, lega_id):
+    lega=get_object_or_404(Lega, id=lega_id)
+    squadra=lega.squadre.filter(Q(primo_allenatore__user_id=request.user.id)| Q(secondo_allenatore__user_id=request.user.id)).exists()
+    if squadra:
+        return redirect('dashboard_squadra', pk=lega_id)
+    else:
+        if request.method=="POST":
+            form=SquadraForm(request.POST)
+            if form.is_valid():
+                squadra=Squadra(
+                    name=form.cleaned_data['name'],
+                    logo=form.cleaned_data['logo'],
+                    primo_allenatore=request.user.profile,
+                    lega=lega,
+                )

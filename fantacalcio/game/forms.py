@@ -12,3 +12,8 @@ class JoinLegaForm(forms.Form):
 
 class PasswordLegaForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
+
+class SquadraForm(forms.Form):
+    name=forms.CharField(max_length=30)
+    logo=forms.ImageField()
+    
