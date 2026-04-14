@@ -115,12 +115,12 @@ def dashboard_squadra(request, pk):
             context={'lega':lega, 'is_admin':is_admin, 'squadra':squadra}
             return render(request, "game/dashboard_squadra.html", context)
         else:
-            return redirect('join_squadra', lega_id=lega.id)
+            return redirect('crea_squadra', lega_id=lega.id)
     else:
         return redirect('home')
     
 @login_required(login_url='/accounts/login/')
-def join_squadra(request, lega_id):
+def crea_squadra(request, lega_id):
     lega=get_object_or_404(Lega, id=lega_id)
     squadra=lega.squadre.filter(Q(primo_allenatore__user_id=request.user.id)| Q(secondo_allenatore__user_id=request.user.id)).exists()
     if squadra:
@@ -135,3 +135,8 @@ def join_squadra(request, lega_id):
                     primo_allenatore=request.user.profile,
                     lega=lega,
                 )
+                squadra.save()
+                return redirect('dashboard_squadra', pk=lega_id)
+        else:
+            form=SquadraForm()
+            return render(request, "game/crea_squadra.html", {"form":form})

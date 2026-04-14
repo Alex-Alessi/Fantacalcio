@@ -103,6 +103,12 @@ STATO_CHOICES=[
     ('panchina', 'Panchina'),
 ]
 
+STATO_INVITO=[
+    ('inviato', 'Inviato'),
+    ('accettato', 'Accettato'),
+    ('rifiutato', 'Rifiutato'),
+]
+
 class Lega(models.Model):
     admin=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='creatore_lega')
     name=models.CharField(max_length=30)
@@ -351,3 +357,16 @@ class Classifica(models.Model):
             self.differenza_reti=self.gol_fatti-self.gol_subiti
             self.punti_totali+=partita.punti_ospite
             self.save()
+
+class InvitoSquadra(models.Model):
+    squadra=models.ForeignKey(Squadra, on_delete=models.CASCADE)
+    utente_invitato=models.ForeignKey(Profile, on_delete=models.CASCADE)
+    stato=models.CharField(choices=STATO_INVITO, default='inviato')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['squadra', 'utente_invitato'],
+                name='unique_utente_invitato_per_squadra'
+            )
+        ]
