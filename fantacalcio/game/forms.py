@@ -17,3 +17,5 @@ class SquadraForm(forms.Form):
     name=forms.CharField(max_length=30)
     logo=forms.ImageField()
     
+class InvitoForm(forms.Form):
+    email=forms.EmailField(widget=forms.TextInput(attrs={"placeholder": "E-mail allenatore"}))

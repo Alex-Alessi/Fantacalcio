@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Giornata, PartitaLega, Lega, Squadra
+from .models import Giornata, PartitaLega, Lega, Squadra, InvitoSquadra
+from accounts.models import Profile
 from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-from .forms import LegaForm, JoinLegaForm, PasswordLegaForm, SquadraForm
+from .forms import LegaForm, JoinLegaForm, PasswordLegaForm, SquadraForm, InvitoForm
 
 # Create your views here.
 
@@ -140,3 +141,34 @@ def crea_squadra(request, lega_id):
         else:
             form=SquadraForm()
             return render(request, "game/crea_squadra.html", {"form":form})
+
+@login_required(login_url='/accounts/login/')
+def invita_socio(request, squadra_id):
+    squadra=Squadra.objects.get(id=squadra_id)
+    if squadra.primo_allenatore==request.user.profile:
+        if request.method=="POST":
+            form=InvitoForm(request.POST)
+            if form.is_valid():
+                email=form.cleaned_data['email']
+                if Profile.objects.filter(email=email).exists():
+                    utente=Profile.objects.get(email=email)
+                    if not squadra.primo_allenatore==utente and not squadra.secondo_allenatore==utente:
+                        invito=InvitoSquadra(
+                            squadra=squadra,
+                            utente_invitato=utente,
+                        )
+                        invito.save()
+                        return redirect('dashboard_squadra', pk=squadra.lega.id)
+                    else:
+                        form.add_error('email', "L'utente è già allenatore di questa squadra")
+                        return render(request, "game/invita_socio.html", {"form":form})
+                else:
+                   form.add_error('email', "L'utente non esiste")
+                   return render(request, "game/invita_socio.html", {"form":form})
+            return render(request, "game/invita_socio.html", {"form":form})
+        else:
+            form=InvitoForm()
+            return render(request, "game/invita_socio.html", {"form":form})
+    else:
+        return redirect('dashboard_squadra', pk=squadra.lega.id)
+        
