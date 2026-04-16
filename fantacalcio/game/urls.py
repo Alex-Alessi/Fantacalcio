@@ -7,5 +7,6 @@ urlpatterns=[
     path('search_league/', views.join_lega_view, name="search_league"),
     path('<int:pk>/detail_league/', views.dettaglio_lega, name="detail_league"),
     path('<int:pk>/dashboard_squadra/', views.dashboard_squadra, name="dashboard_squadra"),
-    path('crea_squadra', views.crea_squadra, name="crea_squadra")
+    path('<int:lega_id>/crea_squadra', views.crea_squadra, name="crea_squadra"),
+    path('<int:squadra_id>/invita_socio', views.invita_socio, name="invita_socio")
 ]

@@ -153,12 +153,16 @@ def invita_socio(request, squadra_id):
                 if Profile.objects.filter(email=email).exists():
                     utente=Profile.objects.get(email=email)
                     if not squadra.primo_allenatore==utente and not squadra.secondo_allenatore==utente:
-                        invito=InvitoSquadra(
-                            squadra=squadra,
-                            utente_invitato=utente,
-                        )
-                        invito.save()
-                        return redirect('dashboard_squadra', pk=squadra.lega.id)
+                        if not InvitoSquadra.objects.filter(squadra=squadra, utente_invitato=utente, stato='attivo').exists():
+                            invito=InvitoSquadra(
+                                squadra=squadra,
+                                utente_invitato=utente,
+                            )
+                            invito.save()
+                            return redirect('dashboard_squadra', pk=squadra.lega.id)
+                        else:
+                            form.add_error(None, "C'è già un invito per questo utente")
+                            return render(request, "game/invita_socio.html", {"form":form})
                     else:
                         form.add_error('email', "L'utente è già allenatore di questa squadra")
                         return render(request, "game/invita_socio.html", {"form":form})
@@ -171,4 +175,15 @@ def invita_socio(request, squadra_id):
             return render(request, "game/invita_socio.html", {"form":form})
     else:
         return redirect('dashboard_squadra', pk=squadra.lega.id)
-        
+
+@login_required(login_url='/accounts/login/')
+def accetta_invito(request, invito_id):
+    invito=InvitoSquadra.objects.get(id=invito_id)
+    if request.method=="POST":
+        if invito.stato=="inviato":
+            if not invito.squadra.secondo_allenatore and invito.utente_invitato==request.user.profile:
+                invito.squadra.secondo_allenatore=invito.utente_invitato
+                invito.squadra.save()
+                invito.stato="accettato"
+                invito.save()
+    return redirect('dashboard_squadra', pk=invito.squadra.lega.id)
