@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from .forms import LegaForm, JoinLegaForm, PasswordLegaForm, SquadraForm, InvitoForm
+from django.db import transaction
 
 # Create your views here.
 
@@ -123,24 +124,27 @@ def dashboard_squadra(request, pk):
 @login_required(login_url='/accounts/login/')
 def crea_squadra(request, lega_id):
     lega=get_object_or_404(Lega, id=lega_id)
-    squadra=lega.squadre.filter(Q(primo_allenatore__user_id=request.user.id)| Q(secondo_allenatore__user_id=request.user.id)).exists()
-    if squadra:
+    squadra_esistente=lega.squadre.filter(Q(primo_allenatore__user_id=request.user.id)| Q(secondo_allenatore__user_id=request.user.id)).exists()
+    if squadra_esistente:
         return redirect('dashboard_squadra', pk=lega_id)
-    else:
-        if request.method=="POST":
-            form=SquadraForm(request.POST)
-            if form.is_valid():
-                squadra=Squadra(
+    form=SquadraForm(request.POST or None)
+    if request.method == "POST":
+        if form.is_valid():
+            with transaction.atomic():
+                if lega.squadre.count() >= lega.partecipanti:
+                    form.add_error(None, "La lega è già al completo")
+                    return render(request, "game/crea_squadra.html", {"form": form})
+
+                Squadra.objects.create(
                     name=form.cleaned_data['name'],
                     logo=form.cleaned_data['logo'],
                     primo_allenatore=request.user.profile,
                     lega=lega,
                 )
-                squadra.save()
+
                 return redirect('dashboard_squadra', pk=lega_id)
-        else:
-            form=SquadraForm()
-            return render(request, "game/crea_squadra.html", {"form":form})
+
+    return render(request, "game/crea_squadra.html", {"form": form})
 
 @login_required(login_url='/accounts/login/')
 def invita_socio(request, squadra_id):
@@ -187,3 +191,20 @@ def accetta_invito(request, invito_id):
                 invito.stato="accettato"
                 invito.save()
     return redirect('dashboard_squadra', pk=invito.squadra.lega.id)
+
+@login_required(login_url='/accounts/login/')
+def rifiuta_invito(request, invito_id):
+    invito=InvitoSquadra.objects.get(id=invito_id)
+    if request.method=="POST":
+        if invito.stato=="inviato":
+            if invito.utente_invitato==request.user.profile:
+                invito.stato="rifiutato"
+                invito.save()
+    return redirect('inviti')
+
+@login_required(login_url='/accounts/login/')
+def inviti(request):
+    utente=request.user.profile
+    inviti=InvitoSquadra.objects.filter(utente_invitato=utente, stato="inviato")
+    context={'inviti':inviti}
+    return render(request, "game/i_miei_inviti.html", context)
