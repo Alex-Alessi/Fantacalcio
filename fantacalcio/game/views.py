@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from .forms import LegaForm, JoinLegaForm, PasswordLegaForm, SquadraForm, InvitoForm
-from django.db import transaction
+from django.db import transaction, IntegrityError
 
 # Create your views here.
 
@@ -157,16 +157,16 @@ def invita_socio(request, squadra_id):
                 if Profile.objects.filter(email=email).exists():
                     utente=Profile.objects.get(email=email)
                     if not squadra.primo_allenatore==utente and not squadra.secondo_allenatore==utente:
-                        if not InvitoSquadra.objects.filter(squadra=squadra, utente_invitato=utente, stato='attivo').exists():
-                            invito=InvitoSquadra(
-                                squadra=squadra,
-                                utente_invitato=utente,
-                            )
+                        invito=InvitoSquadra(
+                            squadra=squadra,
+                            utente_invitato=utente,
+                        )
+                        try:
                             invito.save()
-                            return redirect('dashboard_squadra', pk=squadra.lega.id)
-                        else:
-                            form.add_error(None, "C'è già un invito per questo utente")
+                        except IntegrityError:
+                            form.add_error(None, "Questo utente è già stato invitato")
                             return render(request, "game/invita_socio.html", {"form":form})
+                        return redirect('dashboard_squadra', pk=squadra.lega.id)
                     else:
                         form.add_error('email', "L'utente è già allenatore di questa squadra")
                         return render(request, "game/invita_socio.html", {"form":form})
@@ -208,3 +208,32 @@ def inviti(request):
     inviti=InvitoSquadra.objects.filter(utente_invitato=utente, stato="inviato")
     context={'inviti':inviti}
     return render(request, "game/i_miei_inviti.html", context)
+
+@login_required(login_url='/accounts/login/')
+def calendario(request, pk):
+    squadre = list(Squadra.objects.filter(lega_id=pk))
+
+    tutte_partite = []
+
+    for i in range(len(squadre)):
+        for j in range(i + 1, len(squadre)):
+            tutte_partite.append((squadre[i], squadre[j]))
+
+    giornata = []
+    squadre_usate = set()
+
+    for s1, s2 in tutte_partite:
+
+        if s1 in squadre_usate or s2 in squadre_usate:
+            continue
+
+        giornata.append((s1, s2))
+        squadre_usate.add(s1)
+        squadre_usate.add(s2)
+
+        if len(giornata) == len(squadre) // 2:
+            break
+
+    return render(request, 'calendario.html', {
+        'giornata': giornata
+    })
