@@ -211,29 +211,53 @@ def inviti(request):
 
 @login_required(login_url='/accounts/login/')
 def calendario(request, pk):
-    squadre = list(Squadra.objects.filter(lega_id=pk))
+    if not Giornata.objects.filter(lega_id=pk).exists():
+        
+        squadre = list(Squadra.objects.filter(lega_id=pk))
+        
+        for n in range(len(squadre)-1):
+            giornata = Giornata.objects.create(lega_id=pk, giornata=n+1)
+            for i in range(len(squadre)//2):
+                casa=squadre[i]
+                ospite=squadre[-(i+1)]
+                PartitaLega.objects.create(
+                    giornata=giornata, 
+                    squadra_casa=casa, 
+                    squadra_ospite=ospite
+                )
+                
+            fisso=squadre[0]
+            resto=squadre[1:]
+            resto=resto[-1:] + resto[:-1]
+            squadre=[fisso]+resto
 
-    tutte_partite = []
 
-    for i in range(len(squadre)):
-        for j in range(i + 1, len(squadre)):
-            tutte_partite.append((squadre[i], squadre[j]))
 
-    giornata = []
-    squadre_usate = set()
+    # while len(giornate)<7:
 
-    for s1, s2 in tutte_partite:
+    #     tutte_partite = []
 
-        if s1 in squadre_usate or s2 in squadre_usate:
-            continue
+    #     for i in range(len(squadre)):
+    #         for j in range(i + 1, len(squadre)):
+    #             tutte_partite.append((squadre[i], squadre[j]))
 
-        giornata.append((s1, s2))
-        squadre_usate.add(s1)
-        squadre_usate.add(s2)
+    #     giornata = []
+    #     squadre_usate = set() #set è un insieme vuoto che contiene elementi unici e non è ordinato.  
 
-        if len(giornata) == len(squadre) // 2:
-            break
+    #     for s1, s2 in tutte_partite:
 
-    return render(request, 'calendario.html', {
-        'giornata': giornata
-    })
+    #         if (s1,s2) in partite_usate or s1 in squadre_usate or s2 in squadre_usate:
+    #             continue #salta l'iterazione, al contrario di break che la interrompe proprio
+
+    #         giornata.append((s1, s2))
+    #         squadre_usate.add(s1)
+    #         squadre_usate.add(s2)
+    #         partite_usate.add((s1,s2))
+
+    #         if len(giornata) == len(squadre) // 2:
+    #             giornate.append(giornata)
+    #             break
+
+    # return render(request, 'calendario.html', {
+    #     'giornata': giornata
+    # })

@@ -158,6 +158,7 @@ class Squadra(models.Model):
         return self.name
 
 class Giornata(models.Model):
+    lega=models.OneToOneField(Lega, on_delete=models.CASCADE)
     giornata=models.PositiveIntegerField()
     finita=models.BooleanField(default=False)
     calcolata=models.BooleanField(default=False)
