@@ -208,56 +208,99 @@ def inviti(request):
     inviti=InvitoSquadra.objects.filter(utente_invitato=utente, stato="inviato")
     context={'inviti':inviti}
     return render(request, "game/i_miei_inviti.html", context)
-
+                
 @login_required(login_url='/accounts/login/')
 def calendario(request, pk):
-    if not Giornata.objects.filter(lega_id=pk).exists():
-        
-        squadre = list(Squadra.objects.filter(lega_id=pk))
-        
-        for n in range(len(squadre)-1):
-            giornata = Giornata.objects.create(lega_id=pk, giornata=n+1)
-            for i in range(len(squadre)//2):
-                casa=squadre[i]
-                ospite=squadre[-(i+1)]
-                PartitaLega.objects.create(
-                    giornata=giornata, 
-                    squadra_casa=casa, 
-                    squadra_ospite=ospite
-                )
-                
-            fisso=squadre[0]
-            resto=squadre[1:]
-            resto=resto[-1:] + resto[:-1]
-            squadre=[fisso]+resto
+    lega = Lega.objects.get(id=pk)
+    if Giornata.objects.filter(lega=lega).exists():
+        return redirect("dashboard_squadra", pk=pk)
+    def genera_andata(squadre):
+        squadre = squadre[:]
+        andata = []
 
+        for n in range(len(squadre) - 1):
+            partite = []
 
+            for i in range(len(squadre) // 2):
+                casa = squadre[i]
+                ospite = squadre[-(i + 1)]
 
-    # while len(giornate)<7:
+                if n % 2 == 1:
+                    casa, ospite = ospite, casa
+                partite.append((casa, ospite))
 
-    #     tutte_partite = []
+            andata.append(partite)
 
-    #     for i in range(len(squadre)):
-    #         for j in range(i + 1, len(squadre)):
-    #             tutte_partite.append((squadre[i], squadre[j]))
+            fisso = squadre[0]
+            resto = squadre[1:]
+            resto = resto[-1:] + resto[:-1]
+            squadre = [fisso] + resto
 
-    #     giornata = []
-    #     squadre_usate = set() #set è un insieme vuoto che contiene elementi unici e non è ordinato.  
+        return andata
 
-    #     for s1, s2 in tutte_partite:
+    def genera_ritorno(andata):
+        ritorno = []
 
-    #         if (s1,s2) in partite_usate or s1 in squadre_usate or s2 in squadre_usate:
-    #             continue #salta l'iterazione, al contrario di break che la interrompe proprio
+        for giornata in andata:
+            invertita = []
+            for casa, ospite in giornata:
+                invertita.append((ospite, casa))
+            ritorno.append(invertita)
 
-    #         giornata.append((s1, s2))
-    #         squadre_usate.add(s1)
-    #         squadre_usate.add(s2)
-    #         partite_usate.add((s1,s2))
+        return ritorno
+    
+    def ruota(squadre, shift=1):
+        return squadre[shift:] + squadre[:shift]
+    
+    squadre = list(Squadra.objects.filter(lega_id=pk).order_by("id"))
 
-    #         if len(giornata) == len(squadre) // 2:
-    #             giornate.append(giornata)
-    #             break
+    squadre1 = squadre[:]
+    squadre2 = ruota(squadre1, 1)
+    squadre3 = ruota(squadre1, 2)
 
-    # return render(request, 'calendario.html', {
-    #     'giornata': giornata
-    # })
+    andata1 = genera_andata(squadre1)
+    andata2 = genera_andata(squadre2)
+    andata3 = genera_andata(squadre3)
+
+    ritorno1 = genera_ritorno(andata1)
+    ritorno2 = genera_ritorno(andata2)
+    ritorno3 = genera_ritorno(andata3)
+
+    blocchi = [
+    andata1, ritorno1,
+    andata2, ritorno2,
+    andata3, ritorno3[:3]
+    ]
+    
+    giornate_finali = []
+
+    numero = 1
+
+    for blocco in blocchi:
+        for giornata in blocco:
+            giornate_finali.append({
+                "numero": numero,
+                "partite": giornata
+            })
+            numero += 1
+    
+    for g in giornate_finali:
+        giornata_obj = Giornata.objects.create(
+            lega=lega,
+            giornata=g["numero"]
+        )
+
+        for casa, ospite in g["partite"]:
+            PartitaLega.objects.create(
+                giornata=giornata_obj,
+                squadra_casa=casa,
+                squadra_ospite=ospite
+            )
+    lega.calendario_generato = True
+    lega.save()
+    return redirect("dashboard_squadra", pk=pk)
+
+@login_required(login_url='/accounts/login/')
+def calendario_view(request, pk):
+    giornate=Giornata.objects.filter(lega_id=pk)
+    

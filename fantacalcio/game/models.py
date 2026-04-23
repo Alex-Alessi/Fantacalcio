@@ -116,6 +116,7 @@ class Lega(models.Model):
     partecipanti=models.IntegerField(choices=PARTECIPANTI_CHOICES)
     password = models.CharField(max_length=128, null=True, blank=True)
     crediti = models.IntegerField(choices=CREDITI_CHOICES)
+    calendario_generato = models.BooleanField(default=False)
 
     def set_password(self, raw_password):
         self.password = make_password(raw_password)
