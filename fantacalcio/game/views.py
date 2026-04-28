@@ -302,5 +302,9 @@ def calendario(request, pk):
 
 @login_required(login_url='/accounts/login/')
 def calendario_view(request, pk):
-    giornate=Giornata.objects.filter(lega_id=pk)
+    lega=Lega.objects.get(id=pk)
+    giornate=Giornata.objects.filter(lega=lega).order_by('giornata')
+
+    context={"lega":lega, "giornate":giornate}
+    return render(request, "game/calendario.html", context=context)
     

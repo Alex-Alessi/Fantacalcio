@@ -8,5 +8,7 @@ urlpatterns=[
     path('<int:pk>/detail_league/', views.dettaglio_lega, name="detail_league"),
     path('<int:pk>/dashboard_squadra/', views.dashboard_squadra, name="dashboard_squadra"),
     path('<int:lega_id>/crea_squadra', views.crea_squadra, name="crea_squadra"),
-    path('<int:squadra_id>/invita_socio', views.invita_socio, name="invita_socio")
+    path('<int:squadra_id>/invita_socio', views.invita_socio, name="invita_socio"),
+    path('<int:pk>/calendar', views.calendario, name="calendar"),
+    path('<int:pk>/calendar_view', views.calendario_view, name="calendar_view"),
 ]

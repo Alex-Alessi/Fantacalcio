@@ -1,0 +1,16 @@
+<h1>Partite</h1>
+<ul>
+    {% for giornata in giornate%}
+    <li>
+        <h3>Giornata {{giornata.giornata}}</h3>
+        <ul>
+            {% for partita in giornata.partitalega_set.all %}
+            <li>
+            
+                <p>{{partita.squadra_casa}} vs {{partita.squadra_ospite}}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
